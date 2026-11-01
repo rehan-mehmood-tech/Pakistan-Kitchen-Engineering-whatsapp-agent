@@ -19,6 +19,6 @@ Open the public URL in a private browser window. Ask about the double basket gas
 
 ## Verified in Codex
 
-The existing application started successfully. Four server checks passed; the missing-key test was skipped because a key is configured. Live Groq replies and structured lead capture returned HTTP 200 using `GROQ_MODEL=openai/gpt-oss-20b`. The code's default `llama-3.3-70b-versatile` returned `model_not_found`, so the model override above is required for the tested account. No application logic or UI was changed.
+The existing application started successfully. Four server checks passed; the missing-key test was skipped because a key is configured. Live Groq replies and structured lead capture returned HTTP 200 using `GROQ_MODEL=openai/gpt-oss-20b`. The previous default `llama-3.3-70b-versatile` returned `model_not_found`; the updated code defaults to `openai/gpt-oss-20b`. Remove or correct any obsolete Render `GROQ_MODEL` override. No application logic or UI was changed.
 
 No public website deployment was performed from Codex: this session has no website publishing tool or configured hosting credentials. Publishing a Codex development environment does not deploy the website.

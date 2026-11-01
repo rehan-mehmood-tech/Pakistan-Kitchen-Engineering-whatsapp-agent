@@ -12,7 +12,7 @@ cp .env.example .env
 npm start
 ```
 
-Open port 3000. Optional variables: `PORT`, `GROQ_MODEL` (default `llama-3.3-70b-versatile`). Without a key, dashboard features work and chat shows an explicit setup state. Keys stay server-side. The backend needs HTTPS access to `api.groq.com`. If the hosting environment supplies proxy-backed credentials, ensure its Node fetch configuration supports the platform proxy; this environment can use `NODE_USE_ENV_PROXY=1`.
+Open port 3000. Optional variables: `PORT`, `GROQ_MODEL` (default `openai/gpt-oss-20b`). Without a key, dashboard features work and chat shows an explicit setup state. Keys stay server-side. The backend needs HTTPS access to `api.groq.com`. If the hosting environment supplies proxy-backed credentials, ensure its Node fetch configuration supports the platform proxy; this environment can use `NODE_USE_ENV_PROXY=1`.
 
 ## Deployment
 
@@ -27,3 +27,22 @@ Use fictional contact details. All prices are sample data. Browser-only data is 
 ## Checks
 
 `npm test` exercises the server's catalog, setup state, request handling, and static assets. Validate actual Groq replies with a valid server secret; no live AI success is claimed without that verification.
+
+## AI language and connection diagnostics
+
+The assistant matches the latest meaningful customer message (English, Urdu script, or Roman Urdu), preserves language across contact-only replies, and redirects unrelated questions to kitchen equipment. Generated demo confirmations, follow-ups, and handoff messages use the same language. The UI and browser storage are unchanged.
+
+The default model is now `openai/gpt-oss-20b`. On Render, set `GROQ_MODEL=openai/gpt-oss-20b` or remove an old explicit model override; changing the code default does not override an environment variable. Ensure `GROQ_API_KEY` is set in Render's environment, not only in Codex. Do not paste secrets into logs or source.
+
+Server logs contain only event, diagnostic code, HTTP status (when available), and model. They never include authorization headers, prompts, customer messages, upstream error bodies, or keys:
+
+- `GROQ_MODEL`: selected model unavailable; correct `GROQ_MODEL` on Render.
+- `GROQ_AUTH`: key rejected or unauthorized; check the server key and Groq account permissions.
+- `GROQ_RATE_LIMIT`: account usage limit reached; wait and check Groq usage/limits. Client retry is manual to avoid repeated account usage.
+- `GROQ_UPSTREAM`: upstream rejected the request or has a temporary service problem. Check the logged HTTP status.
+- `GROQ_NETWORK` / `GROQ_TIMEOUT`: connection failure or 25-second request deadline.
+- `GROQ_RESPONSE_FORMAT` / `GROQ_TRUNCATED`: incomplete or invalid structured response; retry with a shorter message.
+
+A JSON-validation rejection or upstream 5xx is retried once within the same 25-second deadline. Authentication, model and rate-limit failures are not automatically retried. No scripted replies replace a failed AI request.
+
+With the server running, `npm test` runs mocked error handling and local server regression checks. `npm run test:live` makes nine real, potentially billable Groq requests through the application and spaces them 22 seconds apart to reduce account rate-limit failures. Use `TEST_BASE_URL` to select the local test server. `LIVE_CASE_FILTER` optionally selects case names by regular expression; selected runs do not assert that skipped scenarios passed.
