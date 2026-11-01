@@ -1,0 +1,8 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+const base=process.env.TEST_BASE_URL||'http://127.0.0.1:3000';
+test('landing page and local assets are served with security headers',async()=>{for(const path of ['/','/app.js','/style.css']){const r=await fetch(base+path);assert.equal(r.status,200);assert.ok((await r.text()).length>1000);assert.equal(r.headers.get('x-content-type-options'),'nosniff');}});
+test('catalog contains the approved twelve products and illustrative fryer price',async()=>{const r=await fetch(base+'/api/catalog');const products=await r.json();assert.equal(products.length,12);assert.equal(products.find(p=>p.name==='Double Basket Gas Deep Fryer').price,85000);assert.ok(products.every(p=>p.availability==='To be confirmed'&&p.quotationRequired));});
+test('configuration endpoint discloses only readiness',async()=>{const r=await fetch(base+'/api/config');const config=await r.json();assert.deepEqual(Object.keys(config),['configured']);assert.equal(typeof config.configured,'boolean');});
+test('chat without a server secret gives an honest setup state',async t=>{const config=await(await fetch(base+'/api/config')).json();if(config.configured)return t.skip('Live service configured; no paid API call during static smoke checks.');const r=await fetch(base+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'user',content:'Hello'}]})});assert.equal(r.status,503);assert.match((await r.json()).error,/not configured/i);});
+test('unknown and traversal-like paths do not expose server files',async()=>{for(const path of ['/server.mjs','/.env','/package.json'])assert.equal((await fetch(base+path)).status,404);});
