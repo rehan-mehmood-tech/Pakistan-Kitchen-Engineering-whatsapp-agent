@@ -11,8 +11,8 @@ Use the existing GitHub repository `rehan-mehmood-tech/Pakistan-Kitchen-Engineer
 ## Public acceptance checks
 
 - Send `hello`, `salam o alikum`, `aoa, kya haal ha`, and a Roman Urdu language preference. Expect real conversational replies, not JSON-format errors or off-topic refusals.
-- Ask about a double basket gas fryer: sample PKR 85,000, no inventory or final-price commitments.
-- Supply fictional name, phone, city and quantity one at a time. Check progressive details, one dashboard lead, quotation status, simulated follow-up and handoff.
+- Ask about a double basket gas fryer: expect relevant fictional options and no financial figures, budget questions or inventory commitments.
+- Supply fictional name, phone, city and quantity one at a time. Check progressive details, one dashboard lead, human follow-up readiness, simulated follow-up and handoff.
 - Refresh: welcome state and no previous personal details. New tabs and close/reopen must also start independently.
 - Keep a tab open and continue: context should remain. Test a failed-request retry without duplicate turns or leads.
 - Existing unrelated browser storage must survive; only obsolete `pke-demo-v1` data is removed.

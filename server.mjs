@@ -3,7 +3,8 @@ import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {completeChat,DEFAULT_MODEL} from './ai.mjs';
 import {prepareHistory} from './history.mjs';
-export const catalog = [ ['Single Basket Gas Deep Fryer',48000,'Fryers'],['Double Basket Gas Deep Fryer',85000,'Fryers'],['Commercial Stainless Steel Work Table',35000,'Preparation'],['Two-Burner Commercial Gas Range',65000,'Cooking'],['Four-Burner Commercial Gas Range',125000,'Cooking'],['Commercial Shawarma Machine',95000,'Cooking'],['Commercial Griddle / Hot Plate',55000,'Cooking'],['Commercial Dough Mixer',145000,'Preparation'],['Stainless Steel Exhaust Hood',75000,'Ventilation'],['Commercial Pizza Oven',180000,'Cooking'],['Stainless Steel Sink Unit',42000,'Cleaning'],['Commercial Food Warmer',58000,'Holding'] ].map(([name,price,category],i)=>({id:`PKE-${i+1}`,name,price,category,description:`Sample ${name.toLowerCase()} for commercial kitchens.`,useCase:'Restaurant and commercial kitchen operations',availability:'To be confirmed',quotationRequired:true}));
+import {catalog} from './catalog.mjs';
+export {catalog};
 function json(res,status,data){res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(data));}
 export function createApp({chat=completeChat,apiKey=process.env.GROQ_API_KEY,model=process.env.GROQ_MODEL?.trim()||DEFAULT_MODEL,logger=entry=>console.warn(JSON.stringify(entry))}={}) {
  const limits=new Map();

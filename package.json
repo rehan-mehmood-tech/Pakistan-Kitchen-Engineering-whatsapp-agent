@@ -8,7 +8,7 @@
     "test": "node --test tests/*.test.mjs",
     "test:live": "node tests/live-groq.mjs",
     "test:browser": "node tests/browser.mjs",
-    "check": "node --check server.mjs && node --check ai.mjs && node --check leads.mjs && node --check history.mjs && node --check public/app.js && node --check public/session.js && node --check public/language.js"
+    "check": "node --check server.mjs && node --check ai.mjs && node --check leads.mjs && node --check history.mjs && node --check public/app.js && node --check public/session.js && node --check public/language.js && node --check catalog.mjs && node --check policy.mjs"
   },
   "engines": {
     "node": ">=22"

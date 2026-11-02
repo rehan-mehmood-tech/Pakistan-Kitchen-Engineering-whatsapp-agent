@@ -1,6 +1,6 @@
 # Pakistan Kitchen Engineering — AI Sales Assistant Demo
 
-A lightweight Node.js and vanilla JavaScript demonstration. No real WhatsApp messages or staff notifications are sent. All product prices and seeded leads are fictional.
+A lightweight Node.js and vanilla JavaScript demonstration. No real WhatsApp messages or staff notifications are sent. The equipment catalog and seeded leads are fictional. No financial figures or budget qualification are included.
 
 ## Run
 
@@ -18,7 +18,7 @@ Open port 3000. Optional server variables: `PORT` and `GROQ_MODEL` (default `ope
 
 One Groq Chat Completions request generates natural-language text. No `response_format`, JSON envelope, or model-generated lead schema is required for conversation. The selected GPT-OSS model uses its supported low reasoning effort. Another configured model is used as configured; credentials and model failures are explicit, without a silent model or scripted-chat fallback.
 
-`leads.mjs` separately extracts explicit customer-provided fields and contextual answers to qualification questions. It validates lengths, names, catalog interests and Pakistani mobile formats. It never extracts facts from assistant examples. Partial details appear immediately; a complete validated contact qualifies the lead. Quotation status additionally requires quotation intent. Ambiguous product types remain marked as needing confirmation. Unknown free-form details may need a clear label (e.g. `city: Abbottabad`) or an answer to a direct question. Extraction is conservative and rule-based, not general-purpose multilingual entity recognition. Extraction failure returns a warning and does not discard a valid AI reply.
+`leads.mjs` separately extracts explicit customer-provided fields and contextual answers to qualification questions. It validates lengths, names, catalog interests and Pakistani mobile formats. It never extracts facts from assistant examples. Partial details appear immediately; equipment need, name and a valid contact number make a lead ready for human follow-up. City is preferred but optional. Ambiguous product types remain marked as needing confirmation. Unknown free-form details may need a clear label (e.g. `city: Abbottabad`) or an answer to a direct question. Extraction is conservative and rule-based, not general-purpose multilingual entity recognition. Extraction failure returns a warning and does not discard a valid AI reply.
 
 Progressive updates reuse a single current lead ID. A failed response can be retried without adding the customer turn or a second lead. The client reuses the turn's request ID for correlation. There is no server-side idempotency cache, so retrying after a lost connection can incur another provider call; it still updates one local lead.
 
@@ -46,7 +46,7 @@ npm run check       # syntax checks; there is no compilation/build step
 npm run test:live   # opt-in, real Groq requests; start server first
 ```
 
-Live checks make nine potentially billable requests, paced 22 seconds apart. They cover greetings, Roman Urdu language preference, Urdu script, sample pricing, language switching with context, quotation details and unrelated scope. A provider account limit may still require a later retry.
+Live checks make nine potentially billable requests, paced 22 seconds apart. They cover greetings, non-financial product discovery, early contact details, optional city refusal, cafe menu recommendations, uncertainty, and English/Urdu responses. A provider account limit may still require a later retry.
 
 Browser tests use test-only Playwright, not an application dependency. If Playwright is already installed, use `npm run test:browser`. This cloud workspace can use the separate test runner:
 
@@ -59,3 +59,11 @@ Set `CHROMIUM_PATH` if the browser is not `/usr/bin/chromium`. Browser tests run
 ## Deploy
 
 Use the existing Render Node web service connected to GitHub `main`. Start command: `npm start`; Node version: 24; model: `openai/gpt-oss-20b`; key entered securely in Render. See [DEPLOYMENT.md](DEPLOYMENT.md). Static hosting alone cannot run the backend. Local tests and a Git push do not prove Render has deployed successfully.
+
+## Inquiry-only business policy
+
+The assistant discovers equipment requirements and collects basic contact information; it never closes sales, negotiates, quotes amounts, discusses payment terms or asks for budgets. `catalog.mjs` contains 25 structured fictional options spanning fryers, cooking, baking, refrigeration, preparation, washing/ventilation and food holding. No financial fields are exposed through the catalog API or catalog UI.
+
+`policy.mjs` checks generated replies for prohibited financial content, repeated requests for known/declined fields, and exact-address requests. Financial sentences are removed only when enough complete, safe AI-generated text remains. Otherwise a violating reply gets at most one corrective AI request; persistent violations return a safe retry error instead of leaking the reply. No scripted conversational fallback is substituted. This is defense in depth alongside the system prompt, not a mathematical guarantee for every wording in every language.
+
+Lead fields now include multiple equipment interests, category, type, quantity, intended use, business type, preferences, optional notes, and skipped/unknown fields. Financial data is not extracted into lead fields or notes. Customer messages themselves remain in transient conversation memory, including any financial information a visitor voluntarily typed. New equipment preferences preserve existing contact/location information. Statuses distinguish New Inquiry, Exploring Requirements, Contact Details Collected and Ready for Human Follow-Up. Follow-ups and staff assignments remain simulations.
