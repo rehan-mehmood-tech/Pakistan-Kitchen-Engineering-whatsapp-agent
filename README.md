@@ -1,48 +1,61 @@
 # Pakistan Kitchen Engineering — AI Sales Assistant Demo
 
-A responsive WhatsApp-inspired sales demonstration with Groq chat, browser-persisted leads, a staff dashboard, sample equipment catalog, follow-up simulation, and human handoff. No real WhatsApp messages or staff notifications are sent.
+A lightweight Node.js and vanilla JavaScript demonstration. No real WhatsApp messages or staff notifications are sent. All product prices and seeded leads are fictional.
 
 ## Run
 
-Requires Node.js 22. The application uses built-in Node modules and has no package dependencies.
+Requires Node.js 22 or newer. The application has no external runtime dependencies.
 
 ```sh
 cp .env.example .env
-# Set GROQ_API_KEY securely in .env; never commit it.
+# Enter GROQ_API_KEY securely in .env; never commit it.
 npm start
 ```
 
-Open port 3000. Optional variables: `PORT`, `GROQ_MODEL` (default `openai/gpt-oss-20b`). Without a key, dashboard features work and chat shows an explicit setup state. Keys stay server-side. The backend needs HTTPS access to `api.groq.com`. If the hosting environment supplies proxy-backed credentials, ensure its Node fetch configuration supports the platform proxy; this environment can use `NODE_USE_ENV_PROXY=1`.
+Open port 3000. Optional server variables: `PORT` and `GROQ_MODEL` (default `openai/gpt-oss-20b`). Missing-key state remains explicit. The backend needs HTTPS access to `api.groq.com`. In a Codex environment with injected proxy-backed secrets, use Node 24's `node --use-env-proxy --env-file-if-exists=.env server.mjs`. Do not copy Codex proxy settings to Render.
 
-## Deployment
+## Response architecture
 
-Deploy as a Node web service, start command `npm start`, set `GROQ_API_KEY` in the host's secret settings, and expose the injected `PORT`. Do not serve only the public folder: live AI requires the server. This session does not include a Sites connector or public hosting deployment tool.
+One Groq Chat Completions request generates natural-language text. No `response_format`, JSON envelope, or model-generated lead schema is required for conversation. The selected GPT-OSS model uses its supported low reasoning effort. Another configured model is used as configured; credentials and model failures are explicit, without a silent model or scripted-chat fallback.
 
-## Demo journey
+`leads.mjs` separately extracts explicit customer-provided fields and contextual answers to qualification questions. It validates lengths, names, catalog interests and Pakistani mobile formats. It never extracts facts from assistant examples. Partial details appear immediately; a complete validated contact qualifies the lead. Quotation status additionally requires quotation intent. Ambiguous product types remain marked as needing confirmation. Unknown free-form details may need a clear label (e.g. `city: Abbottabad`) or an answer to a direct question. Extraction is conservative and rule-based, not general-purpose multilingual entity recognition. Extraction failure returns a warning and does not discard a valid AI reply.
 
-Ask for a double basket gas fryer, request a quote, and supply fictional name, phone, city, and quantity. The server requests structured extraction from Groq; a sufficiently complete lead appears in this browser's dashboard. Open it, simulate follow-up, then assign to sales staff. Reset restores the seven fictional records and clears live demo data.
+Progressive updates reuse a single current lead ID. A failed response can be retried without adding the customer turn or a second lead. The client reuses the turn's request ID for correlation. There is no server-side idempotency cache, so retrying after a lost connection can incur another provider call; it still updates one local lead.
 
-Use fictional contact details. All prices are sample data. Browser-only data is not shared across devices. A simulated follow-up changes the lead to Qualified (awaiting response), stores its timestamp, and appears in conversation history. Closed and handed-off records cannot receive simulated follow-ups. Public production hosting should add durable server storage and deployment-level abuse protection before wider use; the demo has message limits, a 25-second API timeout, and a per-IP in-memory request throttle.
+## Temporary sessions
 
-## Checks
+Each page load creates a fresh in-memory session, welcome message and seven fictional sample leads. Chat messages, active customer details and newly created demo leads reset on refresh, close/reopen or opening another tab. Back-forward cache restoration reloads the demo to avoid restoring private context. Reset starts another fresh session.
 
-`npm test` exercises the server's catalog, setup state, request handling, and static assets. Validate actual Groq replies with a valid server secret; no live AI success is claimed without that verification.
+Only the obsolete `pke-demo-v1` browser storage key is removed. No other storage is cleared, no database is used, and no backend conversation sessions are introduced. Active-page navigation between chat, dashboard and catalog preserves current context.
 
-## AI language and connection diagnostics
+## Conversation limits
 
-The assistant matches the latest meaningful customer message (English, Urdu script, or Roman Urdu), preserves language across contact-only replies, and redirects unrelated questions to kitchen equipment. Generated demo confirmations, follow-ups, and handoff messages use the same language. The UI and browser storage are unchanged.
+Customer messages: 2,000 characters each. Accepted assistant replies and submitted assistant history: 8,000 characters each. At most 100 messages per request. The model context retains all customer turns (up to 16,000 customer characters total), and recent assistant turns up to a 24,000-character history budget. Omitting old assistant turns displays a notice. Customer requirements are never silently dropped. Above the supported budget, an understandable error keeps existing messages visible and asks the visitor to copy relevant information and reset. The HTTP request byte limit is 200,000 bytes.
 
-The default model is now `openai/gpt-oss-20b`. On Render, set `GROQ_MODEL=openai/gpt-oss-20b` or remove an old explicit model override; changing the code default does not override an environment variable. Ensure `GROQ_API_KEY` is set in Render's environment, not only in Codex. Do not paste secrets into logs or source.
+## Errors and diagnostics
 
-Server logs contain only event, diagnostic code, HTTP status (when available), and model. They never include authorization headers, prompts, customer messages, upstream error bodies, or keys:
+A provider request has a 25-second total deadline including retries. Temporary provider 5xx/network failures retry at most once. Empty, oversized or truncated completions receive one corrective request asking for a shorter complete reply. Authentication, model, rate-limit and JSON-validation rejections are not retried identically. No raw upstream exception, key, prompt, phone number or private conversation is logged.
 
-- `GROQ_MODEL`: selected model unavailable; correct `GROQ_MODEL` on Render.
-- `GROQ_AUTH`: key rejected or unauthorized; check the server key and Groq account permissions.
-- `GROQ_RATE_LIMIT`: account usage limit reached; wait and check Groq usage/limits. Client retry is manual to avoid repeated account usage.
-- `GROQ_UPSTREAM`: upstream rejected the request or has a temporary service problem. Check the logged HTTP status.
-- `GROQ_NETWORK` / `GROQ_TIMEOUT`: connection failure or 25-second request deadline.
-- `GROQ_RESPONSE_FORMAT` / `GROQ_TRUNCATED`: incomplete or invalid structured response; retry with a shorter message.
+Diagnostics contain request ID, model, phase (`generation` or `extraction`), category, attempt, provider status when available and elapsed milliseconds. The UI offers manual retry with a request reference on server errors. An account rate limit requires waiting or adjusting Groq account limits; it cannot be repaired by prompt changes. The demonstration's existing throttle also limits traffic to 15 requests per minute per socket IP. A shared reverse-proxy IP can share this limit; per-visitor production rate limiting remains a deployment consideration.
 
-A JSON-validation rejection or upstream 5xx is retried once within the same 25-second deadline. Authentication, model and rate-limit failures are not automatically retried. No scripted replies replace a failed AI request.
+## Tests
 
-With the server running, `npm test` runs mocked error handling and local server regression checks. `npm run test:live` makes nine real, potentially billable Groq requests through the application and spaces them 22 seconds apart to reduce account rate-limit failures. Use `TEST_BASE_URL` to select the local test server. `LIVE_CASE_FILTER` optionally selects case names by regular expression; selected runs do not assert that skipped scenarios passed.
+```sh
+npm test            # deterministic unit and isolated HTTP integration tests; no API key needed
+npm run check       # syntax checks; there is no compilation/build step
+npm run test:live   # opt-in, real Groq requests; start server first
+```
+
+Live checks make nine potentially billable requests, paced 22 seconds apart. They cover greetings, Roman Urdu language preference, Urdu script, sample pricing, language switching with context, quotation details and unrelated scope. A provider account limit may still require a later retry.
+
+Browser tests use test-only Playwright, not an application dependency. If Playwright is already installed, use `npm run test:browser`. This cloud workspace can use the separate test runner:
+
+```sh
+PLAYWRIGHT_MODULE_PATH=/tmp/pke-browser-check/node_modules/playwright/index.mjs npm run test:browser
+```
+
+Set `CHROMIUM_PATH` if the browser is not `/usr/bin/chromium`. Browser tests run an isolated mocked-AI HTTP server; they validate actual DOM interactions, reload/new-tab isolation, legacy-key cleanup, unrelated storage preservation, progressive leads, retries, mobile widths, follow-ups, handoff, catalog and reset. Real Groq behavior is tested separately.
+
+## Deploy
+
+Use the existing Render Node web service connected to GitHub `main`. Start command: `npm start`; Node version: 24; model: `openai/gpt-oss-20b`; key entered securely in Render. See [DEPLOYMENT.md](DEPLOYMENT.md). Static hosting alone cannot run the backend. Local tests and a Git push do not prove Render has deployed successfully.

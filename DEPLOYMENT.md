@@ -1,24 +1,24 @@
-# Publish this existing application on Render
+# Update the existing Render deployment
 
-This is a Node web service, not a static site. GitHub Pages cannot run its Groq backend. No application rebuild or architecture changes are required.
+Use the existing GitHub repository `rehan-mehmood-tech/Pakistan-Kitchen-Engineering-whatsapp-agent`, branch `main`, and existing Render service. No new repository, framework or service is required.
 
-1. Sign in at https://dashboard.render.com/ and choose **New → Web Service**.
-2. Connect the existing GitHub repository `rehan-mehmood-tech/Pakistan-Kitchen-Engineering-whatsapp-agent`, branch `main`.
-3. Use runtime **Node**, leave the root directory empty, build command `npm install --ignore-scripts --no-audit --no-fund`, start command `npm start`.
-4. Add these environment variables in Render:
-   - `NODE_VERSION`: `24`
-   - `GROQ_MODEL`: `openai/gpt-oss-20b`
-   - `GROQ_API_KEY`: enter the real key securely in Render. Codex's proxy-backed secret does not transfer to Render.
-5. Choose your plan and click **Create Web Service**. When deployment is live, open the HTTPS URL Render assigns. That is the link to share on WhatsApp. A free plan, if available, may sleep when idle.
+1. Push the tested source changes to `main`.
+2. If Render auto-deploy is enabled, wait for the deployment for that commit to become Live. Otherwise select **Manual Deploy → Deploy latest commit** in the existing service.
+3. Preserve the current environment settings. Confirm `NODE_VERSION=24`, `GROQ_MODEL=openai/gpt-oss-20b` (or unset to use the default), and a valid `GROQ_API_KEY` entered securely in Render. Codex's proxy-backed key is not transferred to Render.
+4. Existing build command `npm install --ignore-scripts --no-audit --no-fund` and start command `npm start` still work. The app has no runtime package dependencies or frontend build step. Render's injected `PORT` is used automatically.
+5. Verify https://pakistan-kitchen-engineering-whatsapp.onrender.com in a private browser window after it is Live.
 
-The application uses Render's injected PORT automatically. Do not set the Codex proxy variables on Render.
+## Public acceptance checks
 
-## Verification before sharing
+- Send `hello`, `salam o alikum`, `aoa, kya haal ha`, and a Roman Urdu language preference. Expect real conversational replies, not JSON-format errors or off-topic refusals.
+- Ask about a double basket gas fryer: sample PKR 85,000, no inventory or final-price commitments.
+- Supply fictional name, phone, city and quantity one at a time. Check progressive details, one dashboard lead, quotation status, simulated follow-up and handoff.
+- Refresh: welcome state and no previous personal details. New tabs and close/reopen must also start independently.
+- Keep a tab open and continue: context should remain. Test a failed-request retry without duplicate turns or leads.
+- Existing unrelated browser storage must survive; only obsolete `pke-demo-v1` data is removed.
 
-Open the public URL in a private browser window. Ask about the double basket gas fryer (sample PKR 85,000), request a quotation, and supply fictional name, phone, city and quantity. Check the lead in the dashboard, simulate a follow-up, and assign it to staff. These actions are a local demonstration, not real WhatsApp messages or staff notifications. Browser storage is device-specific.
+## Safe production diagnostics
 
-## Verified in Codex
+Filter Render logs by the request reference shown in the UI. Logs identify phase, category, provider status, model, attempt and duration without customer text or secrets. `GROQ_AUTH` means check the Render key/account permissions; `GROQ_MODEL` means correct an obsolete model override; `GROQ_RATE_LIMIT` means wait or inspect Groq usage limits. Never share raw authorization headers or private conversation payloads.
 
-The existing application started successfully. Four server checks passed; the missing-key test was skipped because a key is configured. Live Groq replies and structured lead capture returned HTTP 200 using `GROQ_MODEL=openai/gpt-oss-20b`. The previous default `llama-3.3-70b-versatile` returned `model_not_found`; the updated code defaults to `openai/gpt-oss-20b`. Remove or correct any obsolete Render `GROQ_MODEL` override. No application logic or UI was changed.
-
-No public website deployment was performed from Codex: this session has no website publishing tool or configured hosting credentials. Publishing a Codex development environment does not deploy the website.
+No production success should be claimed until the deployed commit and public acceptance checks are verified. A Git push may trigger auto-deploy; publishing a Codex environment is a separate operation and is not required.
